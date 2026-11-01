@@ -412,6 +412,9 @@ delivery.headers         # {"Content-Type" => "application/x-www-form-urlencoded
 Tpay::Openapi::Notification.verify!(raw_body: delivery.raw_body, jws_header: delivery.jws_header,
                                     env: :sandbox, fetcher: fake.certificate_fetcher)
 
+delivery = fake.refund!(created.transaction_id)  # full refund of a settled transaction; returns the
+                                                 # tr_status=chargeback notification
+
 fake.fail!(created.transaction_id)               # a failed attempt: stays pending, returns nil
 ```
 

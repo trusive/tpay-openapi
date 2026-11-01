@@ -119,6 +119,26 @@ module Tpay
           deliver(notification_params(found, now))
         end
 
+        # Fully refunds a settled transaction as the merchant would through
+        # `transactions.refund`, and returns the notification Tpay posts for a
+        # full refund (`tr_status=chargeback`).
+        #
+        # @return [Delivery]
+        # @raise [ArgumentError] for an unknown or unsettled transaction
+        def refund!(transaction_id)
+          found = @transactions.fetch(transaction_id.to_s) do
+            raise ArgumentError, "no transaction #{transaction_id.inspect} in Drivers::Fake"
+          end
+          unless REFUNDABLE.include?(found["status"])
+            raise ArgumentError, "transaction #{transaction_id} is #{found["status"]}, not settled"
+          end
+
+          now = timestamp
+          found["refunds"] << { "amount" => found["amount"], "date" => now }
+          found["status"] = "refund"
+          deliver(notification_params(found, now).merge("tr_status" => "chargeback"))
+        end
+
         # Records a failed payment attempt. The transaction stays pending, and
         # no notification is returned: Tpay notifies only successful payments
         # and full refunds, so a failed one produces no notification for an

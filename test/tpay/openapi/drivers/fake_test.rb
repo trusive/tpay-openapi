@@ -131,6 +131,28 @@ module Tpay
           assert_raises(ArgumentError) { @fake.pay!("01UNKNOWN") }
         end
 
+        def test_refund_bang_fully_refunds_and_builds_a_chargeback_notification
+          created = create
+          @fake.pay!(created.transaction_id)
+          delivery = @fake.refund!(created.transaction_id)
+
+          assert Notification.verify!(raw_body: delivery.raw_body, jws_header: delivery.jws_header,
+                                      env: :sandbox, fetcher: @fake.certificate_fetcher)
+          payment = Notification.parse(delivery.raw_body, content_type: delivery.content_type)
+
+          assert_predicate payment, :refunded?
+          refute_predicate payment, :paid?
+          assert_equal created.title, payment.title
+          assert_equal "refund", @client.transactions.get(created.transaction_id).transaction_status
+        end
+
+        def test_refund_bang_needs_a_settled_transaction
+          created = create
+
+          assert_raises(ArgumentError) { @fake.refund!(created.transaction_id) }
+          assert_raises(ArgumentError) { @fake.refund!("01UNKNOWN") }
+        end
+
         def test_fail_records_an_attempt_and_leaves_the_transaction_pending
           created = create
 
