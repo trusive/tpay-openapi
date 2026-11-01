@@ -1,0 +1,86 @@
+plugins:
+  - rubocop-minitest
+  - rubocop-performance
+  - rubocop-rake
+
+AllCops:
+  TargetRubyVersion: 3.3
+  NewCops: disable
+
+Style/Documentation:
+  Enabled: false
+
+Style/FrozenStringLiteralComment:
+  Enabled: false
+
+Style/StringLiterals:
+  EnforcedStyle: double_quotes
+
+Style/StringLiteralsInInterpolation:
+  EnforcedStyle: double_quotes
+
+Style/EmptyMethod:
+  Enabled: false
+
+Style/CollectionMethods:
+  StyleGuide: "https://github.com/bbatsov/ruby-style-guide#map-find-select-reduce-size"
+  Enabled: true
+
+# Tests assert on whole response shapes, which needs setup and more than one
+# assertion per case.
+Metrics/MethodLength:
+  Max: 15
+  CountAsOne: [array, hash]
+  Exclude:
+    - 'test/**/*'
+
+Metrics/ClassLength:
+  Max: 150
+  CountAsOne: [array, hash]
+  Exclude:
+    # A simulator's size tracks the API surface it mirrors, not its own
+    # complexity.
+    - 'lib/tpay/openapi/drivers/fake.rb'
+    - 'test/**/*'
+
+Gemspec/DevelopmentDependencies:
+  EnforcedStyle: Gemfile
+
+# The client takes the whole Tpay config as keywords, and create takes the
+# whole transaction - both are the shape of the API, not something to bundle
+# into an options object. A test certificate needs every one of its fields.
+Metrics/ParameterLists:
+  Exclude:
+    - 'lib/tpay/openapi/client.rb'
+    - 'lib/tpay/openapi/drivers/http.rb'
+    - 'lib/tpay/openapi/drivers/fake/pki.rb'
+    - 'lib/tpay/openapi/transactions.rb'
+
+# Building one Net::HTTP request or one X.509 certificate is a run of
+# assignments, nothing branching; mapping a notification or a payer is one
+# field per line. The verifier is a straight sequence of guard clauses, each
+# naming its own failure, and splitting it would scatter the checklist its
+# class comment documents. In tests it is the assertions that add up.
+Metrics/AbcSize:
+  Exclude:
+    - 'lib/tpay/openapi/drivers/http.rb'
+    - 'lib/tpay/openapi/drivers/fake.rb'
+    - 'lib/tpay/openapi/drivers/fake/pki.rb'
+    - 'lib/tpay/openapi/notification/certificate_fetcher.rb'
+    - 'lib/tpay/openapi/notification/payment.rb'
+    - 'lib/tpay/openapi/notification/verifier.rb'
+    - 'lib/tpay/openapi/transactions.rb'
+    - 'test/**/*'
+
+Metrics/CyclomaticComplexity:
+  Exclude:
+    - 'lib/tpay/openapi/drivers/fake.rb'
+    - 'lib/tpay/openapi/notification/verifier.rb'
+
+Metrics/PerceivedComplexity:
+  Exclude:
+    - 'lib/tpay/openapi/notification/verifier.rb'
+
+# `ca` is the X.509 term.
+Naming/MethodParameterName:
+  AllowedNames: [ca]

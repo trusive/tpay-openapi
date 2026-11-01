@@ -1,0 +1,8 @@
+--title "Tpay Open API client for Ruby"
+--markup markdown
+--readme README.md
+--no-private
+lib/**/*.rb
+-
+CHANGELOG.md
+LICENSE.txt
